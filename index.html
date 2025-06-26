@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,9 +9,25 @@
 <body>
     <h1>VCard Viewer</h1>
     <input type="file" id="vcardFile" accept=".vcf">
-    <div id="vcardContent">
-        <!-- VCard content will be displayed here -->
-    </div>
+
+    <h2>Contact Details</h2>
+    <table id="contactsTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Organization</th>
+            </tr>
+        </thead>
+        <tbody id="contactsTableBody">
+            <!-- Contact rows will be inserted here by JavaScript -->
+        </tbody>
+    </table>
+
+    <!-- <div id="vcardRawContent"> -->
+        <!-- VCard raw content was displayed here -->
+    <!-- </div> -->
     <script src="script.js"></script>
 </body>
 </html>
