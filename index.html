@@ -14,15 +14,10 @@
     <table id="contactsTable">
         <thead>
             <tr>
-                <th>Formatted Name (FN)</th>
-                <th>Family Name</th>
-                <th>Given Name</th>
-                <th>Phone 1</th>
-                <th>Phone 2</th>
-                <th>Email 1</th>
-                <th>Email 2</th>
+                <th>Full Name</th>
+                <th>Mobile Phone</th>
+                <th>Primary Email</th>
                 <th>Organization</th>
-                <th>Other Properties</th>
             </tr>
         </thead>
         <tbody id="contactsTableBody">
@@ -33,6 +28,75 @@
     <!-- <div id="vcardRawContent"> -->
         <!-- VCard raw content was displayed here -->
     <!-- </div> -->
+
+    <!-- The Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Contact Details</h2>
+            
+            <div id="modalFullNameContainer">
+                <h3>Name</h3>
+                <p><strong>Formatted Name (FN):</strong> <span id="modalFN">N/A</span></p>
+                <p><strong>Family Name:</strong> <span id="modalFamilyName">N/A</span></p>
+                <p><strong>Given Name:</strong> <span id="modalGivenName">N/A</span></p>
+                <p><strong>Middle Name:</strong> <span id="modalMiddleName">N/A</span></p>
+                <p><strong>Prefix:</strong> <span id="modalPrefix">N/A</span></p>
+                <p><strong>Suffix:</strong> <span id="modalSuffix">N/A</span></p>
+                <p><strong>Nickname:</strong> <span id="modalNickname">N/A</span></p>
+            </div>
+
+            <div id="modalPersonalDetailsContainer">
+                <h3>Personal Details</h3>
+                <p><strong>Birthday:</strong> <span id="modalBirthday">N/A</span></p>
+                <p><strong>Anniversary:</strong> <span id="modalAnniversary">N/A</span></p>
+                <p><strong>Gender:</strong> <span id="modalGender">N/A</span></p>
+            </div>
+
+            <div id="modalOrganizationContainer">
+                <h3>Work/Organization</h3>
+                <p><strong>Organization:</strong> <span id="modalOrg">N/A</span></p>
+                <p><strong>Title:</strong> <span id="modalTitle">N/A</span></p>
+                <p><strong>Role:</strong> <span id="modalRole">N/A</span></p>
+            </div>
+
+            <div id="modalPhonesContainer">
+                <h3>Phone Numbers</h3>
+                <ul id="modalPhonesList"><li>N/A</li></ul>
+            </div>
+
+            <div id="modalEmailsContainer">
+                <h3>Email Addresses</h3>
+                <ul id="modalEmailsList"><li>N/A</li></ul>
+            </div>
+            
+            <div id="modalAddressesContainer">
+                <h3>Addresses</h3>
+                <ul id="modalAddressesList"><li>N/A</li></ul>
+            </div>
+
+            <div id="modalWebsitesContainer">
+                <h3>Websites/URLs</h3>
+                <ul id="modalWebsitesList"><li>N/A</li></ul>
+            </div>
+
+            <div id="modalSocialProfilesContainer">
+                <h3>Social Profiles</h3>
+                <ul id="modalSocialProfilesList"><li>N/A</li></ul>
+            </div>
+
+            <div id="modalNotesContainer">
+                <h3>Notes</h3>
+                <p id="modalNote" style="white-space: pre-wrap;">N/A</p>
+            </div>
+            
+            <div id="modalOtherPropertiesContainer">
+                <h3>Other Properties</h3>
+                <ul id="modalOtherPropertiesList"><li>N/A</li></ul>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
