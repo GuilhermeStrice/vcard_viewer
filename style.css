@@ -1,0 +1,23 @@
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+h1 {
+    color: #333;
+}
+
+input[type="file"] {
+    margin-bottom: 20px;
+}
+
+#vcardContent {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 15px;
+    min-height: 100px;
+    white-space: pre-wrap; /* Preserve line breaks and spaces */
+    word-wrap: break-word; /* Break long lines */
+}
