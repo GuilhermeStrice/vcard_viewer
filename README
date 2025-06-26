@@ -1,0 +1,73 @@
+# vCard Parser & Generator
+
+A simple, web-based tool for parsing and generating vCard (`.vcf`) files. Built as a test using **Jules by Google**, this project demonstrates how structured contact information can be read and written using an intuitive browser interface.
+
+This application allows users to upload `.vcf` (vCard) files to extract contact information or to generate new vCards by entering contact details manually. It's designed to work entirely client-side with no back-end server, ensuring data stays private and local to the browser.
+
+---
+
+## 🌟 Features
+
+- **vCard Parsing**  
+  Upload a `.vcf` file and view its contact details such as:
+  - Full Name
+  - Phone Number
+  - Email Address
+  - Organization and more
+
+- **vCard Generation**  
+  Fill in a simple form to create a new contact and export it as a valid `.vcf` file.
+
+- **Clean, Minimal UI**  
+  Focused interface with no distractions — built for simplicity and usability.
+
+- **Client-Side Processing**  
+  No server required. All operations are performed in the browser for maximum privacy.
+
+---
+
+## 🚀 How It Works
+
+1. **Visit the Website**  
+   Open the page in your browser (works on both desktop and mobile).
+
+2. **To Parse a vCard**  
+   - Upload a `.vcf` file.
+   - The app will read and display the contact details instantly.
+
+3. **To Generate a vCard**  
+   - Fill in the form with contact information.
+   - Click "Generate" to create a `.vcf` file for download.
+
+---
+
+## 🧪 Project Purpose
+
+This project was developed as a **test using Jules by Google**, Google's tool for prototyping and building web experiences with natural language input. It serves as a practical demonstration of how Jules can assist in creating structured, functional applications from simple ideas.
+
+The tool aims to provide a lightweight example of real-world text processing, with a focus on usability and clarity.
+
+---
+
+## 🛠️ Tech Overview
+
+- HTML, CSS, and vanilla JavaScript
+- No frameworks, libraries, or build tools
+- Runs entirely in the browser
+
+---
+
+## 📄 What is a vCard?
+
+A **vCard** (also known as `.vcf` file) is a standard file format for storing contact information. It is commonly used for exchanging contact details across platforms and services like phones, email clients, and CRMs.
+
+---
+
+## 📦 Usage Scenarios
+
+- Importing/exporting contacts manually
+- Quickly viewing a `.vcf` file’s content
+- Creating new contact cards without special software
+- Lightweight alternative to desktop contact managers
+
+---
