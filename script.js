@@ -39,6 +39,35 @@ function decodeQuotedPrintable(str, charset = 'UTF-8') {
 }
 
 
+function formatPhoneNumber(phoneNumberString) {
+    if (!phoneNumberString || typeof phoneNumberString !== 'string' || phoneNumberString.trim() === 'N/A' || phoneNumberString.trim() === '') {
+        return phoneNumberString; // Return original if it's not a usable string
+    }
+    try {
+        // Attempt to parse the phone number.
+        // No default country is provided, so it relies on the number being in international format (e.g., +12125552368)
+        // or being a national number where the country can be easily inferred by the library (less reliable without a hint).
+        const phoneNumber = new libphonenumber.parsePhoneNumberFromString(phoneNumberString);
+
+        if (phoneNumber && phoneNumber.isValid()) {
+            return phoneNumber.formatInternational(); // e.g., +1 212 555 2368
+        } else {
+            // If it's not valid or couldn't be parsed well, try AsYouType for partial formatting
+            // This can sometimes make poorly formatted numbers a bit more readable.
+            const formattedAsYouType = new libphonenumber.AsYouType().input(phoneNumberString);
+            // AsYouType().input() might return an empty string if it processes everything and finds nothing valid,
+            // or it might return a partially formatted string. Only use if it's different and not empty.
+            if (formattedAsYouType && formattedAsYouType !== phoneNumberString) {
+                return formattedAsYouType;
+            }
+            return phoneNumberString; // Fallback to original if not valid or AsYouType didn't help
+        }
+    } catch (error) {
+        // console.error("Error formatting phone number:", phoneNumberString, error);
+        return phoneNumberString; // Fallback to original string in case of an error
+    }
+}
+
 function parseVCard(rawContent) {
     const contacts = [];
     // Handle line folding: join lines that start with a space or tab
@@ -176,9 +205,11 @@ function displayContactsInTable(contacts) {
         // Mobile Phone
         let mobilePhone = 'N/A';
         if (contact.tel && contact.tel.length > 0) {
-            const mobileEntry = contact.tel.find(t => t.params && t.params.TYPE && t.params.TYPE.toUpperCase().includes('CELL'));
+            const mobileEntry = contact.tel.find(t => 
+                t.params && t.params.TYPE && Array.isArray(t.params.TYPE) && t.params.TYPE.includes('CELL')
+            );
             if (mobileEntry) {
-                mobilePhone = mobileEntry.value;
+                mobilePhone = formatPhoneNumber(mobileEntry.value);
             }
         }
         row.insertCell().textContent = mobilePhone;
@@ -207,7 +238,126 @@ function displayContactsInTable(contacts) {
     });
 }
 
-// --- Modal Logic ---
+// --- Tab Navigation Logic ---
+const tabButtons = document.querySelectorAll('.tab-button');
+const tabPanes = document.querySelectorAll('.tab-pane');
+
+function showPane(paneIdToShow) {
+    tabPanes.forEach(pane => {
+        pane.classList.remove('active-pane');
+        // pane.style.display = 'none'; // Already handled by CSS .tab-pane
+    });
+    tabButtons.forEach(button => {
+        button.classList.remove('active-tab-button');
+    });
+
+    const paneToShow = document.getElementById(paneIdToShow);
+    if (paneToShow) {
+        paneToShow.classList.add('active-pane');
+        // paneToShow.style.display = 'block'; // Already handled by CSS .active-pane
+    }
+
+    // Find the button that corresponds to this paneId (e.g., 'parserView' -> 'parserTabButton')
+    const buttonToActivate = document.getElementById(paneIdToShow.replace('View', 'TabButton'));
+    if (buttonToActivate) {
+        buttonToActivate.classList.add('active-tab-button');
+    }
+}
+
+tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+        // Derive target pane ID from button ID e.g. "parserTabButton" -> "parserView"
+        const targetPaneId = this.id.replace('TabButton', 'View');
+        showPane(targetPaneId);
+    });
+});
+
+// Initialize with the Parser tab active and set up other event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Tab initialization
+    showPane('parserView');
+
+    // Set Privacy Policy Effective Date
+    const privacyEffectiveDateSpan = document.getElementById('privacyEffectiveDate');
+    if (privacyEffectiveDateSpan) {
+        const today = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        privacyEffectiveDateSpan.textContent = today.toLocaleDateString(undefined, options); // Uses browser's default locale for formatting
+    }
+
+    // --- VCard Generator Logic ---
+    console.log("Attempting to find generator elements within DOMContentLoaded...");
+    const generateVcfButtonElem = document.getElementById('generateVcfButton');
+    const vcfOutputTextareaElem = document.getElementById('vcfOutput'); 
+    const downloadVcfButtonElem = document.getElementById('downloadVcfButton');
+
+    console.log("generateVcfButton found:", generateVcfButtonElem);
+    console.log("vcfOutputTextarea found:", vcfOutputTextareaElem);
+    console.log("downloadVcfButton found:", downloadVcfButtonElem);
+
+    // Element selection and event listener attachment for generator are inside DOMContentLoaded
+    // const generateVcfButton = document.getElementById('generateVcfButton'); // Replaced by Elem version
+    // const vcfOutputTextarea = document.getElementById('vcfOutput');  // Replaced by Elem version
+    // const downloadVcfButton = document.getElementById('downloadVcfButton'); // Replaced by Elem version
+
+    if (generateVcfButtonElem && vcfOutputTextareaElem) {
+        generateVcfButtonElem.addEventListener('click', function() { // Use Elem version
+            if (document.getElementById('vcardGeneratorForm').checkValidity()) {
+                const vcfString = generateVCardString();
+                vcfOutputTextareaElem.value = vcfString; // Use Elem version
+            } else {
+                alert("Please fill in all required fields (Formatted Name).");
+                document.getElementById('vcardGeneratorForm').reportValidity();
+            }
+        });
+    } else {
+        // These console errors will now only appear if the elements are truly missing from HTML
+        // or if this script somehow runs before even the generator tab's HTML is parsed (unlikely with DOMContentLoaded)
+        if (!generateVcfButtonElem) console.error("Generate VCF button ('generateVcfButton') not found in HTML.");
+        if (!vcfOutputTextareaElem && generateVcfButtonElem) console.error("VCF Output textarea ('vcfOutput') not found in HTML.");
+    }
+
+    if (downloadVcfButton && vcfOutputTextarea) {
+        downloadVcfButtonElem.addEventListener('click', function() { // Use Elem version
+            const vcfString = vcfOutputTextareaElem.value; // Use Elem version
+            if (!vcfString) {
+                alert("Please generate a VCard first.");
+                return;
+            }
+
+            let filename = "contact.vcf";
+            const fnValue = document.getElementById('genFN') ? document.getElementById('genFN').value.trim() : '';
+            if (fnValue) {
+                filename = fnValue.replace(/[^a-z0-9_ \.\-]/gi, '_') + ".vcf";
+            }
+
+            const blob = new Blob([vcfString], { type: 'text/vcard;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                alert("Your browser doesn't support direct download. Please copy the VCard content manually.");
+            }
+        });
+    } else {
+        // Corrected the condition here to check downloadVcfButtonElem
+        if (!downloadVcfButtonElem && generateVcfButtonElem) console.error("Download VCF button ('downloadVcfButton') not found in HTML.");
+    }
+});
+
+// --- Modal Logic (Parser's Modal) ---
+// These are for the parser's modal and should be available once the initial HTML is parsed.
+// They are not inside DOMContentLoaded because functions like displayContactsInTable (which sets up row listeners)
+// might be called before DOMContentLoaded if a file is processed very quickly or if the script is deferred weirdly.
+// However, standard practice is that these too would be safer inside, or their usage deferred.
+// For now, this matches the structure that was working for the modal previously.
 const modal = document.getElementById('contactModal');
 const closeButton = document.querySelector('.close-button');
 
@@ -221,10 +371,196 @@ if (modal && closeButton) {
         }
     }
 } else {
-    console.error("Modal or close button not found. Modal functionality will be affected.");
+    // This error means the fundamental modal structure for the parser is missing.
+    console.error("Parser's Modal ('contactModal') or its close button not found. Modal functionality will be affected.");
 }
 
 
+// --- VCard Generator Logic ---
+const generateVcfButton = document.getElementById('generateVcfButton');
+const vcfOutputTextarea = document.getElementById('vcfOutput');
+
+function generateUUID() { // Basic UUID generator
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+function getCurrentTimestampUTC() {
+    const now = new Date();
+    return now.getUTCFullYear() +
+        ('0' + (now.getUTCMonth() + 1)).slice(-2) +
+        ('0' + now.getUTCDate()).slice(-2) + 'T' +
+        ('0' + now.getUTCHours()).slice(-2) +
+        ('0' + now.getUTCMinutes()).slice(-2) +
+        ('0' + now.getUTCSeconds()).slice(-2) + 'Z';
+}
+
+
+function generateVCardString() {
+    const vcfData = [];
+    vcfData.push('BEGIN:VCARD');
+    vcfData.push('VERSION:3.0');
+
+    // Helper to add property if value exists
+    function addProperty(property, value, params = {}) {
+        if (value) {
+            let line = property;
+            if (Object.keys(params).length > 0) {
+                for (const key in params) {
+                    if(params[key]) { // Ensure param value is not empty
+                         line += `;${key}=${params[key]}`;
+                    }
+                }
+            }
+            vcfData.push(`${line}:${value}`);
+        }
+    }
+    
+    // Helper to get form value
+    function getFormValue(id) {
+        const element = document.getElementById(id);
+        return element ? element.value.trim() : '';
+    }
+
+    // Name
+    const fn = getFormValue('genFN');
+    addProperty('FN;CHARSET=UTF-8', fn);
+
+    const nValues = [
+        getFormValue('genFamilyName'),
+        getFormValue('genGivenName'),
+        getFormValue('genMiddleName'),
+        getFormValue('genPrefix'),
+        getFormValue('genSuffix')
+    ];
+    if (nValues.some(v => v)) { // Only add N if at least one part exists
+        addProperty('N;CHARSET=UTF-8', nValues.join(';'));
+    }
+    addProperty('NICKNAME;CHARSET=UTF-8', getFormValue('genNickname'));
+
+    // Personal Details
+    addProperty('GENDER', getFormValue('genGender'));
+    const bday = getFormValue('genBday');
+    if (bday) addProperty('BDAY', bday.replace(/-/g, '')); // Convert YYYY-MM-DD to YYYYMMDD
+    const anniversary = getFormValue('genAnniversary');
+    if (anniversary) addProperty('ANNIVERSARY', anniversary.replace(/-/g, ''));
+
+    // Work/Organization
+    addProperty('ORG;CHARSET=UTF-8', getFormValue('genOrg'));
+    addProperty('TITLE;CHARSET=UTF-8', getFormValue('genTitle'));
+    addProperty('ROLE;CHARSET=UTF-8', getFormValue('genRole'));
+
+    // Phone 1
+    const phone1 = getFormValue('genPhone1');
+    const phone1Type = getFormValue('genPhone1Type');
+    if (phone1) {
+        addProperty(`TEL;TYPE=${phone1Type}`, phone1);
+    }
+
+    // Email 1
+    const email1 = getFormValue('genEmail1');
+    const email1Type = getFormValue('genEmail1Type');
+     if (email1) {
+        addProperty(`EMAIL;CHARSET=UTF-8;TYPE=${email1Type}`, email1);
+    }
+
+    // Address 1
+    const adr1Street = getFormValue('genAdr1Street');
+    const adr1City = getFormValue('genAdr1City');
+    const adr1State = getFormValue('genAdr1State');
+    const adr1Postal = getFormValue('genAdr1Postal');
+    const adr1Country = getFormValue('genAdr1Country');
+    const adr1Type = getFormValue('genAdr1Type');
+    const adr1Label = getFormValue('genAdr1Label');
+
+    if (adr1Street || adr1City || adr1State || adr1Postal || adr1Country) {
+        // ADR: PO Box; Extended Address; Street Address; Locality; Region; Postal Code; Country
+        const adrValue = `;;${adr1Street};${adr1City};${adr1State};${adr1Postal};${adr1Country}`;
+        addProperty(`ADR;CHARSET=UTF-8;TYPE=${adr1Type}`, adrValue);
+    }
+    if (adr1Label) {
+         addProperty(`LABEL;CHARSET=UTF-8;TYPE=${adr1Type}`, adr1Label);
+    }
+    
+    // Online Presence
+    const url1 = getFormValue('genUrl1');
+    const url1Type = getFormValue('genUrl1Type');
+    if (url1) {
+        addProperty(url1Type ? `URL;TYPE=${url1Type.toUpperCase()}` : 'URL', url1);
+    }
+
+    const social1Type = getFormValue('genSocial1Type');
+    const social1Value = getFormValue('genSocial1Value');
+    if (social1Type && social1Value) {
+        addProperty(`X-SOCIALPROFILE;TYPE=${social1Type.toLowerCase()}`, social1Value);
+    }
+    
+    // Note
+    addProperty('NOTE;CHARSET=UTF-8', getFormValue('genNote'));
+    
+    // Auto-generated fields
+    addProperty('UID', generateUUID());
+    addProperty('REV', getCurrentTimestampUTC());
+
+    vcfData.push('END:VCARD');
+    return vcfData.join('\r\n'); // Standard VCF line ending
+}
+
+
+if (generateVcfButton) {
+    generateVcfButton.addEventListener('click', function() {
+        if (document.getElementById('vcardGeneratorForm').checkValidity()) {
+            const vcfString = generateVCardString();
+            if (vcfOutputTextarea) {
+                vcfOutputTextarea.value = vcfString;
+            }
+        } else {
+            // Optionally, provide more specific feedback or rely on browser's default validation UI
+            alert("Please fill in all required fields (Formatted Name).");
+            document.getElementById('vcardGeneratorForm').reportValidity();
+        }
+    });
+} else {
+    console.error("Generate VCF button not found.");
+}
+
+const downloadVcfButton = document.getElementById('downloadVcfButton');
+
+if (downloadVcfButton) {
+    downloadVcfButton.addEventListener('click', function() {
+        const vcfString = vcfOutputTextarea ? vcfOutputTextarea.value : '';
+        if (!vcfString) {
+            alert("Please generate a VCard first.");
+            return;
+        }
+
+        // Try to get a filename from FN, otherwise use a default
+        let filename = "contact.vcf";
+        const fnValue = document.getElementById('genFN') ? document.getElementById('genFN').value.trim() : '';
+        if (fnValue) {
+            filename = fnValue.replace(/[^a-z0-9_ \.\-]/gi, '_') + ".vcf"; // Sanitize filename
+        }
+
+        const blob = new Blob([vcfString], { type: 'text/vcard;charset=utf-8;' });
+        const link = document.createElement("a");
+        if (link.download !== undefined) { // feature detection
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } else {
+            alert("Your browser doesn't support direct download. Please copy the VCard content manually.");
+        }
+    });
+} else {
+    console.error("Download VCF button not found.");
+}
 function constructFullName(contact) {
     if (contact.fn) { // Formatted Name usually preferred if available
         return contact.fn;
@@ -303,9 +639,16 @@ function populateModal(contact) {
     if (contact.tel && contact.tel.length > 0) {
         contact.tel.forEach(tel => {
             const li = document.createElement('li');
-            let telDesc = tel.value;
-            if (tel.params && tel.params.TYPE) {
-                telDesc += ` (${tel.params.TYPE.split(',').join('/')})`;
+            let formattedNumber = formatPhoneNumber(tel.value);
+            let telDesc = formattedNumber;
+            
+            if (tel.params && tel.params.TYPE && Array.isArray(tel.params.TYPE) && tel.params.TYPE.length > 0) {
+                // Add type information, but try not to duplicate if formatting already includes it (though unlikely for simple types)
+                const typeString = `(${tel.params.TYPE.join('/')})`;
+                // Avoid adding empty parenthesis if no types
+                if (typeString !== '()') {
+                     telDesc += ` ${typeString}`;
+                }
             }
             li.textContent = telDesc;
             phonesList.appendChild(li);
@@ -321,8 +664,8 @@ function populateModal(contact) {
         contact.email.forEach(email => {
             const li = document.createElement('li');
             let emailDesc = email.value;
-            if (email.params && email.params.TYPE) {
-                emailDesc += ` (${email.params.TYPE.split(',').join('/')})`;
+            if (email.params && email.params.TYPE && Array.isArray(email.params.TYPE)) { // Ensure it's an array
+                emailDesc += ` (${email.params.TYPE.join('/')})`;
             }
             li.textContent = emailDesc;
             emailsList.appendChild(li);

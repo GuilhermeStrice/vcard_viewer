@@ -3,14 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VCard Viewer</title>
+    <title>VCard Utility</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>VCard Viewer</h1>
-    <input type="file" id="vcardFile" accept=".vcf">
+    <div class="main-container">
+        <div class="tab-navigation">
+            <button id="parserTabButton" class="tab-button active-tab-button">Parser</button>
+            <button id="generatorTabButton" class="tab-button">Generator</button>
+        <button id="privacyTabButton" class="tab-button">Privacy Policy</button>
+        </div>
 
-    <h2>Contact Details</h2>
+        <div id="parserView" class="tab-pane active-pane">
+            <h1>VCard Parser</h1>
+        <div class="tab-description">
+            <p>A vCard (or .vcf file) is a standard file format for electronic business cards. vCards allow you to easily create and share contact information that can be imported into various email clients, address books, and mobile devices.</p>
+            <p>This Parser section helps you upload an existing vCard (.vcf) file to view its contents in a structured format and explore its details.</p>
+        </div>
+        <label for="vcardFile" class="file-upload-label">Choose VCard File (.vcf)</label>
+        <input type="file" id="vcardFile" accept=".vcf">
+        <h2>Contact Details</h2>
     <table id="contactsTable">
         <thead>
             <tr>
@@ -97,6 +109,169 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/libphonenumber-js@1.10.58/bundle/libphonenumber-min.js"></script>
     <script src="script.js"></script>
+    </div> <!-- End of parserView -->
+
+    <div id="generatorView" class="tab-pane">
+        <h1>VCard Generator</h1>
+        <div class="tab-description">
+            <p>A vCard (or .vcf file) is a standard file format for electronic business cards. vCards allow you to easily create and share contact information that can be imported into various email clients, address books, and mobile devices.</p>
+            <p>This Generator section allows you to create a new vCard by filling in the fields below. You can then download the generated .vcf file to share or import into your contact applications.</p>
+        </div>
+        <form id="vcardGeneratorForm">
+            <fieldset>
+                <legend>Name</legend>
+                <div><label for="genFN">Formatted Name (FN):</label><input type="text" id="genFN" name="genFN" required></div>
+                <div><label for="genFamilyName">Family Name:</label><input type="text" id="genFamilyName" name="genFamilyName"></div>
+                <div><label for="genGivenName">Given Name:</label><input type="text" id="genGivenName" name="genGivenName"></div>
+                <div><label for="genMiddleName">Middle Name:</label><input type="text" id="genMiddleName" name="genMiddleName"></div>
+                <div><label for="genPrefix">Prefix (e.g., Mr., Dr.):</label><input type="text" id="genPrefix" name="genPrefix"></div>
+                <div><label for="genSuffix">Suffix (e.g., Jr., M.D.):</label><input type="text" id="genSuffix" name="genSuffix"></div>
+                <div><label for="genNickname">Nickname:</label><input type="text" id="genNickname" name="genNickname"></div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Personal Details</legend>
+                <div><label for="genGender">Gender:</label><input type="text" id="genGender" name="genGender" placeholder="M, F, O, U, N"></div>
+                <div><label for="genBday">Birthday (YYYY-MM-DD):</label><input type="text" id="genBday" name="genBday" placeholder="YYYY-MM-DD"></div>
+                <div><label for="genAnniversary">Anniversary (YYYY-MM-DD):</label><input type="text" id="genAnniversary" name="genAnniversary" placeholder="YYYY-MM-DD"></div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Work/Organization</legend>
+                <div><label for="genOrg">Organization:</label><input type="text" id="genOrg" name="genOrg"></div>
+                <div><label for="genTitle">Title (Job Title):</label><input type="text" id="genTitle" name="genTitle"></div>
+                <div><label for="genRole">Role:</label><input type="text" id="genRole" name="genRole"></div>
+            </fieldset>
+
+            <fieldset id="phoneFieldsContainer">
+                <legend>Phone</legend>
+                <div class="phone-entry">
+                    <div><label for="genPhone1">Phone Number:</label><input type="tel" id="genPhone1" name="genPhone1"></div>
+                    <div><label for="genPhone1Type">Type:</label>
+                        <select id="genPhone1Type" name="genPhone1Type">
+                            <option value="CELL">Cell</option>
+                            <option value="HOME,VOICE">Home</option>
+                            <option value="WORK,VOICE">Work</option>
+                            <option value="PAGER">Pager</option>
+                            <option value="HOME,FAX">Home Fax</option>
+                            <option value="WORK,FAX">Work Fax</option>
+                            <option value="VOICE">Other Voice</option>
+                            <option value="FAX">Other Fax</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Add button here later for more phones -->
+            </fieldset>
+
+            <fieldset id="emailFieldsContainer">
+                <legend>Email</legend>
+                <div class="email-entry">
+                    <div><label for="genEmail1">Email Address:</label><input type="email" id="genEmail1" name="genEmail1"></div>
+                    <div><label for="genEmail1Type">Type:</label>
+                        <select id="genEmail1Type" name="genEmail1Type">
+                            <option value="HOME,INTERNET">Home</option>
+                            <option value="WORK,INTERNET">Work</option>
+                            <option value="INTERNET">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Add button here later for more emails -->
+            </fieldset>
+
+            <fieldset id="addressFieldsContainer">
+                <legend>Address</legend>
+                <div class="address-entry">
+                    <div><label for="genAdr1Street">Street:</label><input type="text" id="genAdr1Street" name="genAdr1Street"></div>
+                    <div><label for="genAdr1City">City:</label><input type="text" id="genAdr1City" name="genAdr1City"></div>
+                    <div><label for="genAdr1State">State/Region:</label><input type="text" id="genAdr1State" name="genAdr1State"></div>
+                    <div><label for="genAdr1Postal">Postal Code:</label><input type="text" id="genAdr1Postal" name="genAdr1Postal"></div>
+                    <div><label for="genAdr1Country">Country:</label><input type="text" id="genAdr1Country" name="genAdr1Country"></div>
+                    <div><label for="genAdr1Type">Type:</label>
+                        <select id="genAdr1Type" name="genAdr1Type">
+                            <option value="HOME">Home</option>
+                            <option value="WORK">Work</option>
+                        </select>
+                    </div>
+                    <div><label for="genAdr1Label">Label (Full Address):</label><textarea id="genAdr1Label" name="genAdr1Label" rows="3"></textarea></div>
+                </div>
+                 <!-- Add button here later for more addresses -->
+            </fieldset>
+            
+            <fieldset>
+                <legend>Online Presence</legend>
+                <div class="url-entry">
+                    <div><label for="genUrl1">Website URL:</label><input type="url" id="genUrl1" name="genUrl1" placeholder="https://example.com"></div>
+                    <div><label for="genUrl1Type">Type (e.g., WORK, HOME):</label><input type="text" id="genUrl1Type" name="genUrl1Type"></div>
+                </div>
+                <div class="socialprofile-entry">
+                    <div><label for="genSocial1Type">Social Profile Type (e.g., facebook, twitter):</label><input type="text" id="genSocial1Type" name="genSocial1Type"></div>
+                    <div><label for="genSocial1Value">Profile URL/Handle:</label><input type="text" id="genSocial1Value" name="genSocial1Value"></div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Note</legend>
+                <div><label for="genNote">Note:</label><textarea id="genNote" name="genNote" rows="4"></textarea></div>
+            </fieldset>
+
+            <button type="button" id="generateVcfButton">Generate VCard</button>
+        </form>
+        <div id="generatedVCardArea" style="margin-top: 20px;">
+            <h3>Generated VCard:</h3>
+            <textarea id="vcfOutput" rows="15" style="width: 100%; font-family: monospace;" readonly></textarea>
+            <button type="button" id="downloadVcfButton" style="margin-top: 10px;">Download .vcf File</button>
+        </div>
+    </div> <!-- End of generatorView -->
+
+    <div id="privacyView" class="tab-pane">
+        <h1>Privacy Policy</h1>
+        <div class="privacy-content"> <!-- Using a wrapper for potentially more complex styling later -->
+            <p><strong>Effective Date:</strong> <span id="privacyEffectiveDate"></span></p>
+
+            <p>This VCard Utility (the "Service") is committed to respecting your privacy. This policy outlines how we handle information when you use our Service.</p>
+
+            <h2>1. Data Collection and Storage</h2>
+            <p>This Service operates entirely within your web browser on your local device.</p>
+            <ul>
+                <li><strong>No Data Storage:</strong> We do not store, save, or collect any of the VCard data you upload, input, or generate using this tool on our servers or any external database. All processing occurs client-side.</li>
+                <li><strong>No User Accounts:</strong> This Service does not require user registration or accounts.</li>
+            </ul>
+
+            <h2>2. Data Processing</h2>
+            <ul>
+                <li><strong>Client-Side Processing:</strong> When you upload a VCard for parsing or input data to generate a VCard, this information is processed directly in your browser. It is not transmitted to our servers.</li>
+                <li><strong>File Handling:</strong> Uploaded files are read by your browser for parsing. Generated VCards are created in your browser and can be downloaded directly to your device.</li>
+            </ul>
+
+            <h2>3. Cookies and Tracking Technologies</h2>
+            <ul>
+                <li><strong>No Cookies:</strong> This Service does not use cookies or any other tracking technologies to monitor your activity or collect personal information.</li>
+            </ul>
+
+            <h2>4. Your Responsibilities</h2>
+            <ul>
+                <li>You are responsible for the data you choose to upload to the Parser or input into the Generator. Please ensure you have the necessary rights and permissions for any personal data you handle using this tool.</li>
+            </ul>
+
+            <h2>5. GDPR (General Data Protection Regulation)</h2>
+            <ul>
+                <li>While this Service is designed not to collect or store personal data in a way that would typically make us a "data controller" or "data processor" under GDPR for the content of your VCards, we acknowledge the importance of data protection principles.</li>
+                <li>The processing of VCard data you provide is done at your instruction and under your control within your browser environment.</li>
+            </ul>
+
+            <h2>6. Changes to This Privacy Policy</h2>
+            <ul>
+                <li>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated effective date. To update the date, modify the `privacyEffectiveDate` span or the script that populates it.</li>
+            </ul>
+            
+            <h2>7. Contact Us</h2>
+            <ul>
+                <li>For questions about this policy, please note that this is a simple client-side tool with no backend data processing or storage provided by a service operator.</li>
+            </ul>
+        </div>
+    </div> <!-- End of privacyView -->
+    </div> <!-- End of main-container -->
 </body>
 </html>
